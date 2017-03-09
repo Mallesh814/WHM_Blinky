@@ -116,6 +116,6 @@ Timer0AIntHandler(void)
     //
     TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     t0 ^= 0xFF;
-    GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_2, t0);
+    GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_3, t0);
 }
 
