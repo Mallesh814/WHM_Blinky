@@ -22,7 +22,13 @@
 //
 //*****************************************************************************
 #include <stdint.h>
+#include <stdbool.h>
 #include "inc/tm4c123gh6pm.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+#include "inc/hw_memmap.h"
+#include "driverlib/timer.h"
+#include "driverlib/interrupt.h"
 
 
 
@@ -40,43 +46,76 @@
 // Blink the on-board LED.
 //
 //*****************************************************************************
+
+void Timer0AIntHandler(void);
+
+
+uint8_t t0,t1;
+
 int main(void) {
 	volatile uint32_t ui32Loop;
-//
-// Enable the GPIO port that is used for the on-board LED.
-//
-	SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOF;
-//
-// Do a dummy read to insert a few cycles after enabling the peripheral.
-//
-	ui32Loop = SYSCTL_RCGC2_R;
-//
-// Enable the GPIO pin for the LED (PF3). Set the direction as output, and
-// enable the GPIO pin for digital function.
-//
-	GPIO_PORTF_DIR_R = 0x04;
-	GPIO_PORTF_DEN_R = 0x04;
-//
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_4);
+	GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_4, 0XFF);	// Toggle LED0 everytime a key is pressed
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+	GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_2 | GPIO_PIN_3);
+	GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_2 | GPIO_PIN_3, 0XFF);	// Toggle LED0 everytime a key is pressed
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+//    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+
+    //
+    // The Timer0 peripheral must be enabled for use.
+    //
+    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
+
+    //
+    // Set the Timer0B load value to 0.625ms.
+    //
+    TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet() / 2);
+
+    //TimerControlWaitOnTrigger(TIMER0_BASE, TIMER_B, true);
+    //
+    // Configure the Timer0B interrupt for timer timeout.
+    //
+    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+
+    TimerIntRegister(TIMER0_BASE, TIMER_A, Timer0AIntHandler);
+    //
+    // Enable the Timer0B interrupt on the processor (NVIC).
+    //
+    IntEnable(INT_TIMER0A);
+
+    //
+    // Enable Timer0B.
+    //
+    TimerEnable(TIMER0_BASE, TIMER_A );
+
+
+	//
 // Loop forever.
 //
 	while (1) {
-//
-// Turn on the LED.
-//
-		GPIO_PORTF_DATA_R |= 0x04;
-//
-// Delay for a bit.
-//
-		for (ui32Loop = 0; ui32Loop < 200000; ui32Loop++) {
-		}
-//
-// Turn off the LED.
-//
-		GPIO_PORTF_DATA_R &= ~(0x04);
-//
-// Delay for a bit.
-//
-		for (ui32Loop = 0; ui32Loop < 200000; ui32Loop++) {
-		}
+		;
 	}
 }
+
+
+//*****************************************************************************
+//
+// The interrupt handler for the Timer0B interrupt.
+//
+//*****************************************************************************
+void
+Timer0AIntHandler(void)
+{
+    //
+    // Clear the timer interrupt flag.
+    //
+    TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    t0 ^= 0xFF;
+    GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_2, t0);
+}
+
