@@ -2,11 +2,21 @@
 
 //Public Methods
 
-uint8_t M25P_readStatus() {
-    uint8_t status;
-	SSIDataPut(SSI0_BASE, READ_STATUS_REGISTER);
+uint32_t M25P_readStatus() {
+    uint32_t status;
+    uint32_t bigstat;
+    SSIAdvFrameHoldEnable(SSI0_BASE);
+	SSIDataPut(SSI0_BASE, READ_IDENTIFICATION2);
+	SSIDataPut(SSI0_BASE, 0x00);
+	SSIDataPut(SSI0_BASE, 0x00);
+	SSIAdvDataPutFrameEnd(SSI0_BASE, 0x00);
     SSIDataGet(SSI0_BASE, &status);
-    return status;
+    bigstat = status;
+    SSIDataGet(SSI0_BASE, &status);
+    bigstat = (bigstat << 8) | status;
+    SSIDataGet(SSI0_BASE, &status);
+    bigstat = (bigstat << 8) | status;
+    return bigstat;
 }
 
 bool M25P_isBusy() {
@@ -78,7 +88,7 @@ void M25P_readBytes(uint32_t addr, uint8_t * buf, int len) {
 }
 
 void M25P_readOTP(uint32_t addr, uint8_t * buf, int len) {
-    while(M25P_isBusy()) delay(0);
+    while(M25P_isBusy()) ;
 
     SSIDataPut(SSI0_BASE, READ_OTP);
     M25P_sendAddress(addr);

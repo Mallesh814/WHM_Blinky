@@ -29,18 +29,14 @@
 #include "inc/hw_memmap.h"
 #include "driverlib/timer.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/ssi.h"
+
+#include "configs.h"
+#include "parser.h"
+#include "M25PXFlashMemory.h"
 
 
 
-//*****************************************************************************
-//
-//! \addtogroup example_list
-//! <h1>Blinky (blinky)</h1>
-//!
-//! A very simple example that blinks the on-board LED using direct register
-//! access.
-//
-//*****************************************************************************
 //*****************************************************************************
 //
 // Blink the on-board LED.
@@ -50,18 +46,24 @@
 void Timer0AIntHandler(void);
 
 
-uint8_t t0,t1;
+uint8_t t0 = 0, t1 = 0, call_parser = 0, uart_char = 0;
 
 int main(void) {
-	volatile uint32_t ui32Loop;
 
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+	uint32_t deci = 0;
+	char ascii[6]="\0";
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
 	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_4);
 	GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_4, 0XFF);	// Toggle LED0 everytime a key is pressed
 
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
 	GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_2 | GPIO_PIN_3);
 	GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_2 | GPIO_PIN_3, 0XFF);	// Toggle LED0 everytime a key is pressed
+
+    InitConsole();
+    InitSPI(SSI0_BASE, SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER, 1000000, 8);
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
 //    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
@@ -74,7 +76,7 @@ int main(void) {
     //
     // Set the Timer0B load value to 0.625ms.
     //
-    TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet() / 2);
+    TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet() / 2000);
 
     //TimerControlWaitOnTrigger(TIMER0_BASE, TIMER_B, true);
     //
@@ -93,12 +95,18 @@ int main(void) {
     //
     TimerEnable(TIMER0_BASE, TIMER_A );
 
+	transfer("\033[2J\033[H");									// Clear Screen
+    transfer("Console Init Working\n\r");
 
-	//
-// Loop forever.
-//
 	while (1) {
-		;
+		if(call_parser){
+			call_parser = 0;
+		    deci = M25P_readStatus();
+		    dec_ascii(deci, ascii);
+		    transfer("Status Read Successful : ");
+		    transfer(ascii);
+		    transfer("\n\r");
+		}
 	}
 }
 
@@ -117,5 +125,21 @@ Timer0AIntHandler(void)
     TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     t0 ^= 0xFF;
     GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_3, t0);
+    call_parser=1;
 }
+
+
+void isr_uart()
+{
+	uint32_t u0status;
+	u0status = UARTIntStatus(UART0_BASE,true);
+	UARTIntClear(UART0_BASE,u0status);
+	if(UARTCharsAvail(UART0_BASE))
+		{
+			uart_char = UARTCharGet(UART0_BASE);
+			UARTCharPut(UART0_BASE,uart_char);
+			call_parser = 1;
+		}
+}
+
 

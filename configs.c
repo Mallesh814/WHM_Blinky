@@ -21,9 +21,7 @@ extern void isr_uart();// rst_handler contains the code to run on reset.
 	SSI_FRF_TI			// TI frame format
 	SSI_FRF_NMW			// National MicroWire frame format
 
-//*****************************************************************************
 // Values that can be passed as ui32Mode.
-//*****************************************************************************
 
 	SSI_MODE_MASTER		// SSI master
 	SSI_MODE_SLAVE		// SSI slave

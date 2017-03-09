@@ -29,7 +29,7 @@
 #define DEEP_POWER_DOWN                 0xb9
 #define RELEASE_FROM_DEEP_POWER_DOWN    0xab
 
-    uint8_t M25P_readStatus();
+    uint32_t M25P_readStatus();
     bool M25P_isBusy();
     bool M25P_isWritable();
     void M25P_programByte(uint32_t addr,uint8_t b);
