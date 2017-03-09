@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "driverlib/ssi.h"
+#include "inc/hw_memmap.h"
+
 //Instructions
 #define WRITE_ENABLE                    0x06
 #define WRITE_DISABLE                   0x04
