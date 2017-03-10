@@ -34,6 +34,7 @@ void InitSPI(uint32_t ui32Base, uint32_t ui32Protocol, uint32_t ui32Mode, uint32
 	uint32_t CONF_PIN_CLK, CONF_PIN_FSS, CONF_PIN_TX, CONF_PIN_RX;
 	uint32_t GPIO_PORT_BASE;
 	uint32_t PIN_CLK, PIN_FSS, PIN_TX, PIN_RX;
+	uint32_t pui32Dummy;
 
 
 	switch(ui32Base)
@@ -122,14 +123,17 @@ void InitSPI(uint32_t ui32Base, uint32_t ui32Protocol, uint32_t ui32Mode, uint32
     // This step is not necessary if your part does not support pin muxing.
 
 	GPIOPinConfigure(CONF_PIN_CLK);
-    GPIOPinConfigure(CONF_PIN_FSS);
+//    GPIOPinConfigure(CONF_PIN_FSS);
     GPIOPinConfigure(CONF_PIN_RX);
     GPIOPinConfigure(CONF_PIN_TX);
 
     // Configure the GPIO settings for the SSI pins.  This function also gives
     // control of these pins to the SSI hardware.
-    GPIOPinTypeSSI(GPIO_PORT_BASE, PIN_CLK | PIN_FSS | PIN_RX |
-    		PIN_TX);
+    GPIOPinTypeSSI(GPIO_PORT_BASE, PIN_CLK | PIN_RX | PIN_TX);
+	GPIOPinTypeGPIOOutput(GPIO_PORT_BASE, PIN_FSS);
+	GPIOPinWrite(GPIO_PORT_BASE,PIN_FSS, 0XFF);	// Toggle LED0 everytime a key is pressed
+
+//    GPIOPinTypeSSI(GPIO_PORT_BASE, PIN_CLK | PIN_FSS | PIN_RX | PIN_TX);
 
     //
     // Configure and enable the SSI port for SPI master mode.  Use SSI,
@@ -143,8 +147,12 @@ void InitSPI(uint32_t ui32Base, uint32_t ui32Protocol, uint32_t ui32Mode, uint32
 
     SSIConfigSetExpClk(ui32Base, SysCtlClockGet(), ui32Protocol, ui32Mode, ui32BitRate, ui32DataWidth);
 
-    // Enable the SSI1 module.
     SSIEnable(ui32Base);
+    while(SSIDataGetNonBlocking(ui32Base, &pui32Dummy))
+    {
+    	;
+    }
+
 
 }
 

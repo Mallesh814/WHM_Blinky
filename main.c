@@ -101,7 +101,7 @@ int main(void) {
 	while (1) {
 		if(call_parser){
 			call_parser = 0;
-		    deci = M25P_readStatus();
+		    deci = M25P_ReadID();
 		    dec_ascii(deci, ascii);
 		    transfer("Status Read Successful : ");
 		    transfer(ascii);

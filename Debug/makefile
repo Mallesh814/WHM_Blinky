@@ -28,7 +28,7 @@ all: WHM_Blinky.elf
 WHM_Blinky.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Linker'
-	arm-none-eabi-gcc -L$(HOME)/tivaware/driverlib/gcc -Wl,--static,--gc-sections,-T../ldStart.ld -mthumb -mcpu=cortex-m4 -o "WHM_Blinky.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -L$(HOME)/tivaware/driverlib/gcc -L/Users/mallesh/tivaware/utils -Wl,--static,--gc-sections,-T../ldStart.ld -mthumb -mcpu=cortex-m4 -o "WHM_Blinky.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

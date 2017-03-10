@@ -2,21 +2,60 @@
 
 //Public Methods
 
+
+//*****************************************************************************
+//
+// This function sets up SSI External Flash ID Read
+//
+//*****************************************************************************
+uint32_t M25P_ReadID()
+{
+   uint32_t ui32Receive, ui32ReadIDFlash;
+
+//   HWREG(M25P_FSS_GPIO + (GPIO_O_DATA + (M25P_FSS_PIN << 2))) = 0x00;
+
+
+	GPIOPinWrite(M25P_FSS_GPIO,M25P_FSS_PIN, 0X00);	// PULL DOWN Slave Slect PIN
+
+	SSIDataPut(M25P_SSI_BASE, READ_IDENTIFICATION);
+	SSIDataPut(M25P_SSI_BASE, 0x00);
+	SSIDataPut(M25P_SSI_BASE, 0x00);
+	SSIDataPut(M25P_SSI_BASE, 0x00);
+
+	while(SSIBusy(M25P_SSI_BASE));
+
+	GPIOPinWrite(M25P_FSS_GPIO,M25P_FSS_PIN, 0XFF);	// PULL UP Slave Slect PIN
+
+	SSIDataGet(M25P_SSI_BASE, &ui32Receive);
+	SSIDataGet(M25P_SSI_BASE, &ui32Receive);
+	ui32ReadIDFlash = ui32Receive;
+	SSIDataGet(M25P_SSI_BASE, &ui32Receive);
+	ui32ReadIDFlash  = (ui32ReadIDFlash << 8) | ui32Receive;
+	SSIDataGet(M25P_SSI_BASE, &ui32Receive);
+	ui32ReadIDFlash  = (ui32ReadIDFlash << 8) | ui32Receive;
+
+	return ui32ReadIDFlash;
+}
+
+
+
 uint32_t M25P_readStatus() {
-    uint32_t status;
-    uint32_t bigstat;
-    SSIAdvFrameHoldEnable(SSI0_BASE);
-	SSIDataPut(SSI0_BASE, READ_IDENTIFICATION2);
-	SSIDataPut(SSI0_BASE, 0x00);
-	SSIDataPut(SSI0_BASE, 0x00);
-	SSIAdvDataPutFrameEnd(SSI0_BASE, 0x00);
-    SSIDataGet(SSI0_BASE, &status);
-    bigstat = status;
-    SSIDataGet(SSI0_BASE, &status);
-    bigstat = (bigstat << 8) | status;
-    SSIDataGet(SSI0_BASE, &status);
-    bigstat = (bigstat << 8) | status;
-    return bigstat;
+	   uint32_t ui32Status;
+
+	//   HWREG(M25P_FSS_GPIO + (GPIO_O_DATA + (M25P_FSS_PIN << 2))) = 0x00;
+
+		GPIOPinWrite(M25P_FSS_GPIO,M25P_FSS_PIN, 0X00);	// PULL DOWN Slave Slect PIN
+
+		SSIDataPut(M25P_SSI_BASE, READ_STATUS_REGISTER);
+		SSIDataPut(M25P_SSI_BASE, 0x00);
+		while(SSIBusy(M25P_SSI_BASE));
+
+		GPIOPinWrite(M25P_FSS_GPIO,M25P_FSS_PIN, 0XFF);	// PULL UP Slave Slect PIN
+
+		SSIDataGet(M25P_SSI_BASE, &ui32Status);
+		SSIDataGet(M25P_SSI_BASE, &ui32Status);
+
+		return ui32Status;
 }
 
 bool M25P_isBusy() {

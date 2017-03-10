@@ -5,7 +5,14 @@
 #include <stdbool.h>
 
 #include "driverlib/ssi.h"
+#include "driverlib/gpio.h"
 #include "inc/hw_memmap.h"
+#include "inc/hw_gpio.h"
+
+//Configuration
+#define M25P_SSI_BASE SSI0_BASE
+#define M25P_FSS_GPIO GPIO_PORTA_BASE
+#define M25P_FSS_PIN GPIO_PIN_3
 
 //Instructions
 #define WRITE_ENABLE                    0x06
@@ -29,6 +36,10 @@
 #define DEEP_POWER_DOWN                 0xb9
 #define RELEASE_FROM_DEEP_POWER_DOWN    0xab
 
+
+#define DUMMY_BYTE       			0x00
+
+	uint32_t M25P_ReadID();
     uint32_t M25P_readStatus();
     bool M25P_isBusy();
     bool M25P_isWritable();
