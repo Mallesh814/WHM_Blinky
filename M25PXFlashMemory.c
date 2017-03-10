@@ -8,6 +8,16 @@
 // This function sets up SSI External Flash ID Read
 //
 //*****************************************************************************
+
+void InitFLASH(void)
+{
+	SysCtlPeripheralEnable(M25P_FSS_PERIPH);
+	GPIOPinTypeGPIOOutput(M25P_FSS_GPIO, M25P_FSS_PIN);
+	GPIOPinWrite(M25P_FSS_GPIO,M25P_FSS_PIN, 0XFF);			// Pull Up FSS PIN of 23LCV1024
+    InitSPI(M25P_SSI_BASE, SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER, 1000000, 8, false);
+}
+
+
 uint32_t M25P_ReadID()
 {
    uint32_t ui32Receive, ui32ReadIDFlash;
@@ -17,7 +27,7 @@ uint32_t M25P_ReadID()
 
 	GPIOPinWrite(M25P_FSS_GPIO,M25P_FSS_PIN, 0X00);	// PULL DOWN Slave Slect PIN
 
-	SSIDataPut(M25P_SSI_BASE, READ_IDENTIFICATION);
+	SSIDataPut(M25P_SSI_BASE, M25P_READ_IDENTIFICATION);
 	SSIDataPut(M25P_SSI_BASE, 0x00);
 	SSIDataPut(M25P_SSI_BASE, 0x00);
 	SSIDataPut(M25P_SSI_BASE, 0x00);
@@ -46,7 +56,7 @@ uint32_t LCV_readMode() {
 
 		GPIOPinWrite(GPIO_PORTC_BASE,GPIO_PIN_6, 0X00);	// PULL DOWN Slave Slect PIN
 
-		SSIDataPut(M25P_SSI_BASE, READ_STATUS_REGISTER);
+		SSIDataPut(M25P_SSI_BASE, M25P_READ_STATUS_REGISTER);
 		SSIDataPut(M25P_SSI_BASE, 0x00);
 		while(SSIBusy(M25P_SSI_BASE));
 
@@ -65,7 +75,7 @@ uint32_t M25P_readStatus() {
 
 		GPIOPinWrite(M25P_FSS_GPIO,M25P_FSS_PIN, 0X00);	// PULL DOWN Slave Slect PIN
 
-		SSIDataPut(M25P_SSI_BASE, READ_STATUS_REGISTER);
+		SSIDataPut(M25P_SSI_BASE, M25P_READ_STATUS_REGISTER);
 		SSIDataPut(M25P_SSI_BASE, 0x00);
 		while(SSIBusy(M25P_SSI_BASE));
 
@@ -90,7 +100,7 @@ void M25P_programByte(uint32_t addr,uint8_t b) {
 
     M25P_enableWrite(); //write is disabled automatically afterwards
 
-    SSIDataPut(SSI0_BASE, PAGE_PROGRAM);
+    SSIDataPut(SSI0_BASE, M25P_PAGE_PROGRAM);
     M25P_sendAddress(addr);
     SSIDataPut(SSI0_BASE, b);
 }
@@ -125,7 +135,7 @@ uint8_t M25P_readByte(uint32_t addr) {
 
 	while(M25P_isBusy()) ;
 
-    SSIDataPut(SSI0_BASE, READ_DATA_BYTES);
+    SSIDataPut(SSI0_BASE, M25P_READ_DATA_BYTES);
     M25P_sendAddress(addr);
     SSIDataGet(SSI0_BASE, &value);
 
@@ -148,7 +158,7 @@ void M25P_readBytes(uint32_t addr, uint8_t * buf, int len) {
 void M25P_readOTP(uint32_t addr, uint8_t * buf, int len) {
     while(M25P_isBusy()) ;
 
-    SSIDataPut(SSI0_BASE, READ_OTP);
+    SSIDataPut(SSI0_BASE, M25P_READ_OTP);
     M25P_sendAddress(addr);
 
     SSIDataGet(SSI0_BASE, &buf[0]); //pass over the dummy uint8_t
@@ -163,7 +173,7 @@ void M25P_programOTP(uint32_t addr, uint8_t * buf, int len) {
 
     M25P_enableWrite(); //write is disabled automatically afterwards
 
-    SSIDataPut(SSI0_BASE, PROGRAM_OTP);
+    SSIDataPut(SSI0_BASE, M25P_PROGRAM_OTP);
     M25P_sendAddress(addr);
 
     for (int i=0; i<len; i++) {
@@ -176,7 +186,7 @@ void M25P_freezeOTP() {
 
     M25P_enableWrite(); //write is disabled automatically afterwards
 
-    SSIDataPut(SSI0_BASE, PROGRAM_OTP);
+    SSIDataPut(SSI0_BASE, M25P_PROGRAM_OTP);
 
     M25P_sendAddress(64); //the write lock
 
@@ -190,7 +200,7 @@ void M25P_eraseSubsector(uint32_t addr) {
 
     M25P_enableWrite(); //write is disabled automatically afterwards
 
-    SSIDataPut(SSI0_BASE, SUBSECTOR_ERASE);
+    SSIDataPut(SSI0_BASE, M25P_SUBM25P_SECTOR_ERASE);
     M25P_sendAddress(addr);
 }
 
@@ -199,18 +209,18 @@ void M25P_bulkErase() {
 
     M25P_enableWrite(); //write is disabled automatically afterwards
 
-    SSIDataPut(SSI0_BASE, BULK_ERASE);
+    SSIDataPut(SSI0_BASE, M25P_BULK_ERASE);
 
-    while(M25P_isBusy()) ; //BULK_ERASE can take awhile, lets just wait until it completes
+    while(M25P_isBusy()) ; //M25P_BULK_ERASE can take awhile, lets just wait until it completes
 }
 
 //Private Methods
 void M25P_enableWrite() {
-	SSIDataPut(SSI0_BASE, WRITE_ENABLE);
+	SSIDataPut(SSI0_BASE, M25P_WRITE_ENABLE);
 }
 
 void M25P_disableWrite() {
-    SSIDataPut(SSI0_BASE, WRITE_DISABLE);
+    SSIDataPut(SSI0_BASE, M25P_WRITE_DISABLE);
 }
 
 void M25P_sendAddress(uint32_t addr) {
@@ -235,7 +245,7 @@ void M25P_programPage(uint32_t addr, uint8_t * buf, int len) {
 //    Serial.print(buf[2]);
 //    Serial.println("]");
 
-    SSIDataPut(SSI0_BASE, PAGE_PROGRAM);
+    SSIDataPut(SSI0_BASE, M25P_PAGE_PROGRAM);
     M25P_sendAddress(addr);
     for (int i=0; i<len; i++) {
     	SSIDataPut(SSI0_BASE, buf[i]);
@@ -245,7 +255,7 @@ void M25P_programPage(uint32_t addr, uint8_t * buf, int len) {
 void M25P_readPage(uint32_t addr, uint8_t * buf, int len) {
     while(M25P_isBusy()) ;
 
-    SSIDataPut(SSI0_BASE, READ_DATA_BYTES);
+    SSIDataPut(SSI0_BASE, M25P_READ_DATA_BYTES);
     M25P_sendAddress(addr);
 
     for (int i=0; i<len; i++) {

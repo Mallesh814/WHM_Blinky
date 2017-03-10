@@ -34,6 +34,7 @@
 #include "configs.h"
 #include "parser.h"
 #include "M25PXFlashMemory.h"
+#include "SRAM_23LCV1024.h"
 
 
 
@@ -52,6 +53,8 @@ int main(void) {
 
 	uint32_t deci = 0;
 	char ascii[6]="\0";
+	uint8_t tx_buf[] = "0123456789ABCDEF";
+	uint8_t rx_buf[] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','0','\0'};
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
 	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_4);
@@ -62,12 +65,11 @@ int main(void) {
 	GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_2 | GPIO_PIN_3);
 	GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_2 | GPIO_PIN_3, 0XFF);	// Toggle LED0 everytime a key is pressed
 
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
-	GPIOPinWrite(GPIO_PORTC_BASE,GPIO_PIN_6, 0XFF);	// Toggle LED0 everytime a key is pressed
 
     InitConsole();
-    InitSPI(SSI0_BASE, SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER, 1000000, 8);
+	transfer("\033[2J\033[H");									// Clear Screen
+    transfer("Console Initialized\n\r");
+
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
 //    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
@@ -99,16 +101,32 @@ int main(void) {
     //
     TimerEnable(TIMER0_BASE, TIMER_A );
 
-	transfer("\033[2J\033[H");									// Clear Screen
-    transfer("Console Init Working\n\r");
+    transfer("Timer Started\n\r");
+    InitSRAM();
+    transfer("SRAM Initialized\n\r");
+	SRAMSetMode(SRAM_MODE_SEQUENTIAL);
+	deci = SRAMReadMode();
+    dec_ascii((deci >> 6), ascii);
+    transfer("SRAM in Mode : ");
+    transfer(ascii);
+    transfer("\n\r");
+
+
+
+
 
 	while (1) {
 		if(call_parser){
 			call_parser = 0;
-		    deci = LCV_readMode();
-		    dec_ascii(deci, ascii);
-		    transfer("Status Read Successful : ");
-		    transfer(ascii);
+			for(deci = 0; deci < 17 ; deci++)
+				rx_buf[deci] = '\0';
+
+			SRAMWriteData( &tx_buf[0], 16, 0x0010);
+			SRAMReadData( &rx_buf[0], 16, 0x0010);
+//			deci = SRAMReadMode();
+//		    dec_ascii((deci >> 6), ascii);
+		    transfer("Data Read Successful : ");
+		    transfer(rx_buf);
 		    transfer("\n\r");
 		}
 	}
@@ -129,7 +147,7 @@ Timer0AIntHandler(void)
     TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     t0 ^= 0xFF;
     GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_3, t0);
-    call_parser=1;
+//    call_parser=1;
 }
 
 

@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../M25PXFlashMemory.c \
+../SRAM_23LCV1024.c \
 ../configs.c \
 ../main.c \
 ../parser.c \
@@ -12,6 +13,7 @@ C_SRCS += \
 
 OBJS += \
 ./M25PXFlashMemory.o \
+./SRAM_23LCV1024.o \
 ./configs.o \
 ./main.o \
 ./parser.o \
@@ -19,6 +21,7 @@ OBJS += \
 
 C_DEPS += \
 ./M25PXFlashMemory.d \
+./SRAM_23LCV1024.d \
 ./configs.d \
 ./main.d \
 ./parser.d \

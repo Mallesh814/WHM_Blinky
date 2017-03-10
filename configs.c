@@ -28,7 +28,7 @@ extern void isr_uart();// rst_handler contains the code to run on reset.
 	SSI_MODE_SLAVE_OD	// SSI slave with output disabled
 */
 
-void InitSPI(uint32_t ui32Base, uint32_t ui32Protocol, uint32_t ui32Mode, uint32_t ui32BitRate, uint32_t ui32DataWidth){
+void InitSPI(uint32_t ui32Base, uint32_t ui32Protocol, uint32_t ui32Mode, uint32_t ui32BitRate, uint32_t ui32DataWidth, bool enfss){
 
 	uint32_t SYSCTL_PERIPH_SPI, SYSCTL_PERIPH_GPIO;
 	uint32_t CONF_PIN_CLK, CONF_PIN_FSS, CONF_PIN_TX, CONF_PIN_RX;
@@ -123,19 +123,17 @@ void InitSPI(uint32_t ui32Base, uint32_t ui32Protocol, uint32_t ui32Mode, uint32
     // This step is not necessary if your part does not support pin muxing.
 
 	GPIOPinConfigure(CONF_PIN_CLK);
-//    GPIOPinConfigure(CONF_PIN_FSS);
     GPIOPinConfigure(CONF_PIN_RX);
     GPIOPinConfigure(CONF_PIN_TX);
 
-    // Configure the GPIO settings for the SSI pins.  This function also gives
-    // control of these pins to the SSI hardware.
-    GPIOPinTypeSSI(GPIO_PORT_BASE, PIN_CLK | PIN_RX | PIN_TX);
-	GPIOPinTypeGPIOOutput(GPIO_PORT_BASE, PIN_FSS);
-	GPIOPinWrite(GPIO_PORT_BASE,PIN_FSS, 0XFF);	// Toggle LED0 everytime a key is pressed
+	if(enfss){
+		GPIOPinConfigure(CONF_PIN_FSS);
+	    GPIOPinTypeSSI(GPIO_PORT_BASE, PIN_CLK | PIN_FSS | PIN_RX | PIN_TX);
+	}
+	else {
+	    GPIOPinTypeSSI(GPIO_PORT_BASE, PIN_CLK | PIN_RX | PIN_TX);
+	}
 
-//    GPIOPinTypeSSI(GPIO_PORT_BASE, PIN_CLK | PIN_FSS | PIN_RX | PIN_TX);
-
-    //
     // Configure and enable the SSI port for SPI master mode.  Use SSI,
     // system clock supply, idle clock level low and active low clock in
     // freescale SPI mode, master mode, 1MHz SSI frequency, and 8-bit data.
@@ -148,10 +146,7 @@ void InitSPI(uint32_t ui32Base, uint32_t ui32Protocol, uint32_t ui32Mode, uint32
     SSIConfigSetExpClk(ui32Base, SysCtlClockGet(), ui32Protocol, ui32Mode, ui32BitRate, ui32DataWidth);
 
     SSIEnable(ui32Base);
-    while(SSIDataGetNonBlocking(ui32Base, &pui32Dummy))
-    {
-    	;
-    }
+    while(SSIDataGetNonBlocking(ui32Base, &pui32Dummy));
 
 
 }

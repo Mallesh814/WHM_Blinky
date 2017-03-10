@@ -21,9 +21,12 @@
 #include "driverlib/i2c.h"
 #include "driverlib/ssi.h"
 
+#define SSI_DUMMY_BYTE                      0x00
+
+
 void InitI2C(uint32_t , bool);
 void InitConsole();
-void InitSPI(uint32_t , uint32_t , uint32_t , uint32_t , uint32_t );
+void InitSPI(uint32_t , uint32_t , uint32_t , uint32_t , uint32_t, bool);
 
 
 #endif /* CONFIGS_H_ */
