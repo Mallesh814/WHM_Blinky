@@ -62,6 +62,10 @@ int main(void) {
 	GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_2 | GPIO_PIN_3);
 	GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_2 | GPIO_PIN_3, 0XFF);	// Toggle LED0 everytime a key is pressed
 
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
+	GPIOPinWrite(GPIO_PORTC_BASE,GPIO_PIN_6, 0XFF);	// Toggle LED0 everytime a key is pressed
+
     InitConsole();
     InitSPI(SSI0_BASE, SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER, 1000000, 8);
 
@@ -101,7 +105,7 @@ int main(void) {
 	while (1) {
 		if(call_parser){
 			call_parser = 0;
-		    deci = M25P_ReadID();
+		    deci = LCV_readMode();
 		    dec_ascii(deci, ascii);
 		    transfer("Status Read Successful : ");
 		    transfer(ascii);

@@ -40,7 +40,8 @@
 #define DUMMY_BYTE       			0x00
 
 	uint32_t M25P_ReadID();
-    uint32_t M25P_readStatus();
+	uint32_t LCV_readMode();
+	uint32_t M25P_readStatus();
     bool M25P_isBusy();
     bool M25P_isWritable();
     void M25P_programByte(uint32_t addr,uint8_t b);

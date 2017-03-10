@@ -39,6 +39,25 @@ uint32_t M25P_ReadID()
 
 
 
+uint32_t LCV_readMode() {
+	   uint32_t ui32Status;
+
+	//   HWREG(M25P_FSS_GPIO + (GPIO_O_DATA + (M25P_FSS_PIN << 2))) = 0x00;
+
+		GPIOPinWrite(GPIO_PORTC_BASE,GPIO_PIN_6, 0X00);	// PULL DOWN Slave Slect PIN
+
+		SSIDataPut(M25P_SSI_BASE, READ_STATUS_REGISTER);
+		SSIDataPut(M25P_SSI_BASE, 0x00);
+		while(SSIBusy(M25P_SSI_BASE));
+
+		GPIOPinWrite(GPIO_PORTC_BASE,GPIO_PIN_6, 0XFF);	// PULL UP Slave Slect PIN
+
+		SSIDataGet(M25P_SSI_BASE, &ui32Status);
+		SSIDataGet(M25P_SSI_BASE, &ui32Status);
+
+		return ui32Status;
+}
+
 uint32_t M25P_readStatus() {
 	   uint32_t ui32Status;
 
