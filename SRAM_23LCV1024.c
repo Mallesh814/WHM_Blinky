@@ -151,7 +151,7 @@ void SRAMReadData(uint8_t *buffer, uint8_t buffer_size, uint32_t address)
 	while(buffer_size)
 	{
 
-		for(i=((buffer_size > 8) ?(8):(buffer_size)); i ; i--){
+		for(i=((buffer_size > 8) ?(8):(buffer_size)); i ; i--){		// Dealing with Chunks of 8 Bytes(FIFO LENGTH)
 			SSIDataPutNonBlocking(LCV_SSI_BASE, SSI_DUMMY_BYTE);
 		}
 

@@ -102,12 +102,12 @@ int main(void) {
     TimerEnable(TIMER0_BASE, TIMER_A );
 
     transfer("Timer Started\n\r");
-    InitSRAM();
-    transfer("SRAM Initialized\n\r");
-	SRAMSetMode(SRAM_MODE_SEQUENTIAL);
-	deci = SRAMReadMode();
-    dec_ascii((deci >> 6), ascii);
-    transfer("SRAM in Mode : ");
+    InitFLASH();
+    transfer("FLASH Initialized\n\r");
+
+    deci = M25P_readStatus();
+    dec_ascii(deci , ascii);
+    transfer("FLASH Status : ");
     transfer(ascii);
     transfer("\n\r");
 
@@ -118,17 +118,49 @@ int main(void) {
 	while (1) {
 		if(call_parser){
 			call_parser = 0;
-			for(deci = 0; deci < 17 ; deci++)
-				rx_buf[deci] = '\0';
+//			deci = M25P_readByte(0x0013);
+//		    dec_ascii(deci, ascii);
+//		    transfer("Data Read Successful : ");
+//		    transfer(ascii);
+//		    transfer("\n\r");
 
-			SRAMWriteData( &tx_buf[0], 16, 0x0010);
-			SRAMReadData( &rx_buf[0], 16, 0x0010);
-//			deci = SRAMReadMode();
-//		    dec_ascii((deci >> 6), ascii);
+		    M25P_readBytes(rx_buf, 15, 0x0170);
 		    transfer("Data Read Successful : ");
 		    transfer(rx_buf);
 		    transfer("\n\r");
-		}
+
+		    M25P_programBytes(tx_buf, 15, 0x0170);
+
+		    M25P_readBytes(rx_buf, 15, 0x0170);
+		    transfer("Data Read Successful : ");
+		    transfer(rx_buf);
+		    transfer("\n\r");
+
+		    M25P_eraseSector(0x0170);
+
+		    M25P_readBytes(rx_buf, 15, 0x0170);
+		    transfer("Data Read Successful : ");
+		    transfer(rx_buf);
+		    transfer("\n\r");
+
+		    M25P_programBytes(tx_buf, 15, 0x0170);
+
+		    M25P_readBytes(rx_buf, 15, 0x0170);
+		    transfer("Data Read Successful : ");
+		    transfer(rx_buf);
+		    transfer("\n\r");
+
+
+
+/*		    M25P_programByte(0x0002,83);
+
+
+			deci = M25P_readByte(0x0002);
+		    dec_ascii(deci, ascii);
+		    transfer("Data Read Successful : ");
+		    transfer(ascii);
+		    transfer("\n\r");
+*/		}
 	}
 }
 
